@@ -1,4 +1,3 @@
-
 package handlers
 
 import (
@@ -34,6 +33,7 @@ func TestAPIKeyFlow(t *testing.T) {
 
 	router.ServeHTTP(w, req)
 
+	// Assert the status code and response
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	var generateResponse map[string]string
@@ -50,6 +50,7 @@ func TestAPIKeyFlow(t *testing.T) {
 
 	router.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "API key is valid\n", w.Body.String())
 
 	// Step 3: Revoke the API Key
 	revokePayload := map[string]string{"api_key": apiKey}
@@ -61,6 +62,7 @@ func TestAPIKeyFlow(t *testing.T) {
 
 	router.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "API key revoked\n", w.Body.String())
 
 	// Step 4: Validate the revoked API Key
 	req = httptest.NewRequest(http.MethodGet, "/validate?api_key="+apiKey, nil)
@@ -68,4 +70,5 @@ func TestAPIKeyFlow(t *testing.T) {
 
 	router.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	assert.Equal(t, "{\"error\":\"Invalid API key\"}\n", w.Body.String())
 }
