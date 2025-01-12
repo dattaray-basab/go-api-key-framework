@@ -18,13 +18,15 @@ func main() {
 	router.POST("/revoke", handlers.RevokeKey)
 	router.GET("/validate", handlers.ValidateKey)
 
+	// New service that requires a valid API key
+	router.GET("/new-service", handlers.NewService)
+
 	// Start the server
 	log.Println("Starting server on :8080")
 	if err := router.Run(":8080"); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }
-
 
 // to test using curl
 // curl -X POST http://localhost:8080/generate -H "Content-Type: application/json" -d '{"user_id": "test_user"}'
@@ -36,13 +38,12 @@ func main() {
 // 1.
 // bd@Basabs-MBP go-api-key-framework % curl -X POST http://localhost:8080/generate -H "Content-Type: application/json" -d '{"user_id": "test_user"}'
 
-// {"api_key":"NlINIdDZfT0y6RxKRVGC1cYWWK9XMPO5tSFdPaYOC_A="}% 
+// {"api_key":"NlINIdDZfT0y6RxKRVGC1cYWWK9XMPO5tSFdPaYOC_A="}%
 
 // 2.
 // bd@Basabs-MBP go-api-key-framework % curl -X GET "http://localhost:8080/validate?api_key=NlINIdDZfT0y6RxKRVGC1cYWWK9XMPO5tSFdPaYOC_A="
-// {"message":"API key is valid"}%    
+// {"message":"API key is valid"}%
 
 // 3.
 // bd@Basabs-MBP go-api-key-framework % curl -X POST http://localhost:8080/revoke -H "Content-Type: application/json" -d '{"api_key": "NlINIdDZfT0y6RxKRVGC1cYWWK9XMPO5tSFdPaYOC_A="}'
-// {"message":"API key revoked"}%   
-
+// {"message":"API key revoked"}%
