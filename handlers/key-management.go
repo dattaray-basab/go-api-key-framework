@@ -1,62 +1,55 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
-
-	"github.com/dattaray-basab/go-api-key-management/utils"
 	"github.com/gin-gonic/gin"
-
-	"github.com/dattaray-basab/go-api-key-management/storage"
 )
 
-var store = storage.NewKeyStore()
+// Example in-memory store for API keys (this could be a database or external storage in a real-world app)
+var apiKeys = map[string]string{}
 
-// GenerateKey creates a new API key for a user.
+// GenerateKey is the handler that generates a new API key for a user
 func GenerateKey(c *gin.Context) {
-	var req struct {
-		UserID string `json:"user_id" binding:"required"`
-	}
+	// Example logic to generate a new API key
+	userID := c.PostForm("user_id")
+	apiKey := fmt.Sprintf("API_KEY_FOR_%s", userID)
 
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "user_id is required"})
-		return
-	}
+	// Store the API key (for example purposes, we're just using an in-memory map)
+	apiKeys[userID] = apiKey
 
-	apiKey := utils.GenerateAPIKey()
-	store.AddKey(req.UserID, apiKey)
-
-	c.JSON(http.StatusOK, gin.H{"api_key": apiKey})
+	c.JSON(http.StatusOK, gin.H{
+		"api_key": apiKey,
+	})
 }
 
-// RevokeKey revokes an API key.
+// RevokeKey is the handler to revoke an existing API key
 func RevokeKey(c *gin.Context) {
-	var req struct {
-		APIKey string `json:"api_key" binding:"required"`
-	}
+	userID := c.PostForm("user_id")
 
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "api_key is required"})
-		return
-	}
+	// Remove the API key from storage
+	delete(apiKeys, userID)
 
-	if store.RevokeKey(req.APIKey) {
-		c.JSON(http.StatusOK, gin.H{"message": "API key revoked"})
-	} else {
-		c.JSON(http.StatusNotFound, gin.H{"error": "API key not found"})
-	}
+	c.JSON(http.StatusOK, gin.H{
+		"status": "API key revoked successfully",
+	})
 }
 
-// ValidateKey checks if an API key is valid.
+// ValidateKey is the handler to validate the API key
 func ValidateKey(c *gin.Context) {
-	apiKey := c.Query("api_key")
-	if apiKey == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "api_key is required"})
+	userID := c.DefaultQuery("user_id", "")
+
+	// Check if the API key exists for the user
+	apiKey, exists := apiKeys[userID]
+	if !exists {
+		c.JSON(http.StatusNotFound, gin.H{
+			"status": "API key not found",
+		})
 		return
 	}
 
-	if store.IsValid(apiKey) {
-		c.JSON(http.StatusOK, gin.H{"message": "API key is valid"})
-	} else {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid API key"})
-	}
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "API key valid",
+		"api_key": apiKey,
+	})
 }

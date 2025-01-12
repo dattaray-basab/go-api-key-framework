@@ -20,7 +20,7 @@
       "type": "go",
       "request": "launch",
       "mode": "test",
-      "program": "${workspaceFolder}/handlers/key-management-test.go",
+      "program": "${workspaceFolder}/handlers/key-management_test.go",
       "env": {
         "PORT": "8080"
       },
